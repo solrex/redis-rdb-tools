@@ -136,6 +136,8 @@ class MemoryCallback(RdbCallback):
         self._aux_redis_ver = None
         self._aux_redis_bits = None
         self._redis_version = StrictVersion(redis_version)
+        self.REDIS_4_0 = StrictVersion('4.0')
+        self.REDIS_3_2 = StrictVersion('3.2')
         self._total_internal_frag = 0
         if architecture == 64 or architecture == '64':
             self._pointer_size = 8
@@ -212,7 +214,7 @@ class MemoryCallback(RdbCallback):
             self._current_size += self.sizeof_string(field)
             self._current_size += self.sizeof_string(value)
             self._current_size += self.hashtable_entry_overhead()
-            if self._redis_version < StrictVersion('4.0'):
+            if self._redis_version < self.REDIS_4_0:
                 self._current_size += 2*self.robj_overhead()
     
     def end_hash(self, key):
@@ -232,7 +234,7 @@ class MemoryCallback(RdbCallback):
         if self._current_encoding == 'hashtable':
             self._current_size += self.sizeof_string(member)
             self._current_size += self.hashtable_entry_overhead()
-            if self._redis_version < StrictVersion('4.0'):
+            if self._redis_version < self.REDIS_4_0:
                 self._current_size += self.robj_overhead()
     
     def end_set(self, key):
@@ -248,7 +250,7 @@ class MemoryCallback(RdbCallback):
         size = self.top_level_object_overhead(key, expiry)
 
         # ignore the encoding in the rdb, and predict the encoding that will be used at the target redis version
-        if self._redis_version >= StrictVersion('3.2'):
+        if self._redis_version >= self.REDIS_3_2:
             # default configuration of redis 3.2
             self._current_encoding = "quicklist"
             self._list_max_ziplist_size = 8192 # default is -2 which means 8k
@@ -295,7 +297,7 @@ class MemoryCallback(RdbCallback):
         else: #  linkedlist
             self._current_size += self.linkedlist_entry_overhead() * self._current_length
             self._current_size += self.linkedlist_overhead()
-            if self._redis_version < StrictVersion('4.0'):
+            if self._redis_version < self.REDIS_4_0:
                 self._current_size += self.robj_overhead() * self._current_length
             self._current_size += self._list_items_size
         self.emit_record("list", key, self._current_size, self._current_encoding, self._current_length,
@@ -336,7 +338,7 @@ class MemoryCallback(RdbCallback):
         if self._current_encoding == 'skiplist':
             self._current_size += 8 # score (double)
             self._current_size += self.sizeof_string(member)
-            if self._redis_version < StrictVersion('4.0'):
+            if self._redis_version < self.REDIS_4_0:
                 self._current_size += self.robj_overhead()
             self._current_size += self.skiplist_entry_overhead()
     
@@ -363,7 +365,7 @@ class MemoryCallback(RdbCallback):
         except ValueError:
             pass
         l = len(string)
-        if self._redis_version < StrictVersion('3.2'):
+        if self._redis_version < self.REDIS_3_2:
             return self.malloc_overhead(l + 8 + 1)
         if l < 2**5:
             return self.malloc_overhead(l + 1 + 1)
