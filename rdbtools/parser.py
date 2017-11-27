@@ -409,32 +409,29 @@ class RdbParser(object):
     def read_length_with_encoding(self, f):
         length = 0
         is_encoded = False
-        bytes = []
-        bytes.append(read_unsigned_char(f))
-        enc_type = (bytes[0] & 0xC0) >> 6
+        b = read_unsigned_char(f)
+        enc_type = (b & 0xC0) >> 6
         if enc_type == REDIS_RDB_ENCVAL:
             is_encoded = True
-            length = bytes[0] & 0x3F
+            length = b & 0x3F
         elif enc_type == REDIS_RDB_6BITLEN:
-            length = bytes[0] & 0x3F
+            length = b & 0x3F
         elif enc_type == REDIS_RDB_14BITLEN:
-            bytes.append(read_unsigned_char(f))
-            length = ((bytes[0] & 0x3F) << 8) | bytes[1]
-        elif bytes[0] == REDIS_RDB_32BITLEN:
+            c = read_unsigned_char(f)
+            length = ((b & 0x3F) << 8) | c
+        elif b == REDIS_RDB_32BITLEN:
             length = read_unsigned_int_be(f)
-        elif bytes[0] == REDIS_RDB_64BITLEN:
+        elif b == REDIS_RDB_64BITLEN:
             length = read_unsigned_long_be(f)
         else:
-            raise Exception('read_length_with_encoding', "Invalid string encoding %s (encoding byte 0x%X)" % (enc_type, bytes[0]))
+            raise Exception('read_length_with_encoding', "Invalid string encoding %s (encoding byte 0x%X)" % (enc_type, b))
         return (length, is_encoded)
 
     def read_length(self, f) :
         return self.read_length_with_encoding(f)[0]
 
     def read_string(self, f) :
-        tup = self.read_length_with_encoding(f)
-        length = tup[0]
-        is_encoded = tup[1]
+        length, is_encoded = self.read_length_with_encoding(f)
         val = None
         if is_encoded :
             if length == REDIS_RDB_ENC_INT8 :
