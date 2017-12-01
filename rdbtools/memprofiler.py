@@ -94,9 +94,9 @@ class PrintAllKeys(object):
             return  # some records are not keys (e.g. dict)
         if self._largest is None:
             if self._bytes is None or record.bytes >= int(self._bytes):
-                rec_str = "%d,%s,%s,%d,%s,%d,%d,\"%s\"\n" % (
+                rec_str = "%d,%s,%s,%d,%s,%d,%d,%s\n" % (
                     record.database, record.type, record.key, record.bytes, record.encoding, record.size,
-                    record.len_largest_element, record.expiry)
+                    record.len_largest_element, record.expiry.isoformat())
                 self._out.write(codecs.encode(rec_str, 'latin-1'))
         else:
             heappush(self._heap, (record.bytes, record))
