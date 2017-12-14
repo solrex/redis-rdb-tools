@@ -97,7 +97,7 @@ class PrintAllKeys(object):
             if self._bytes is None or record.bytes >= int(self._bytes):
                 rec_str = "%d,%s,%s,%d,%s,%d,%d,%s\n" % (
                     record.database, record.type, record.key, record.bytes, record.encoding, record.size,
-                    record.len_largest_element, record.expiry.strftime('YYYY-MM-DDTHH:MM:SS') if isinstance(record.expiry, datetime) else '')
+                    record.len_largest_element, record.expiry.strftime('%Y-%m-%dT%H:%M:%S') if isinstance(record.expiry, datetime) else '')
                 self._out.write(codecs.encode(rec_str, 'latin-1'))
         else:
             heappush(self._heap, (record.bytes, record))
